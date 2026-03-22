@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.get('email', '') == "denilmendonca076@gmail.com") ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin')
+      );
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Notes
+    match /notes/{userId} {
+      // Allow the owner to list and write to their own notes collection
+      allow read, write: if isOwner(userId) || isAdmin();
+
+      match /notes/{noteId} {
+        // Allow owner full access
+        allow read, write: if isOwner(userId) || isAdmin();
+        
+        // Allow shared access
+        allow read: if isAuthenticated() && (
+          resource.data.get('visibility', 'private') == 'public' ||
+          request.auth.uid in resource.data.get('sharedWith', [])
+        );
+        
+        allow update: if isAuthenticated() && 
+          resource.data.get('visibility', 'private') == 'shared' && 
+          request.auth.uid in resource.data.get('sharedWith', []);
+      }
+    }
+
+    // Shared notes index
+    match /sharedNotes/{userId}/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+  }
+}

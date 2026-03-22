@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName", "email"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "A canvas-based note document",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "emoji": { "type": "string" },
+        "coverColor": { "type": "string" },
+        "widgets": { "type": "array" },
+        "visibility": { "type": "string", "enum": ["private", "shared", "public"] },
+        "sharedWith": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "widgets"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Individual user profiles"
+    },
+    "/notes/{userId}/notes/{noteId}": {
+      "schema": "Note",
+      "description": "User's personal notes"
+    }
+  }
+}

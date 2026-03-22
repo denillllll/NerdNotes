@@ -1,0 +1,5 @@
+{
+  "name": "Nerd Notes",
+  "description": "A canvas-based note-taking app with freeform widgets, real-time sync, and dark-themed UI.",
+  "requestFramePermissions": []
+}
